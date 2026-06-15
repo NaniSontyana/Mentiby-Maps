@@ -1,0 +1,38 @@
+<div class="map-container">
+    <!-- Controls Section -->
+    <div class="controls">
+        <label for="start">Start Location:</label>
+        <input
+          id="start"
+          type="text"
+          [(ngModel)]="startLocation"
+          placeholder="Enter start location"
+        />
+    
+        <label for="destination">Destination:</label>
+        <input
+          id="destination"
+          type="text"
+          [(ngModel)]="destinationLocation"
+          placeholder="Enter destination"
+        />
+    
+        <button (click)="calculateRoute()">Get Route</button>
+
+        <!-- Route Summary Details -->
+        <div class="route-summary" *ngIf="routeDistance && routeDuration">
+          <div class="summary-item">
+            <span class="summary-label">Distance:</span>
+            <span class="summary-value">{{ routeDistance }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Est. Time:</span>
+            <span class="summary-value">{{ routeDuration }}</span>
+          </div>
+        </div>
+      </div>
+  
+    <!-- Map Section -->
+    <div id="map"></div>
+  </div>
+  

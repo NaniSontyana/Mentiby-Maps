@@ -1,0 +1,216 @@
+<div class="settings-container">
+  <!-- Status Banners -->
+  <div class="banner success" *ngIf="successMessage">
+    <span class="banner-icon">&#10004;</span>
+    <span class="banner-text">{{ successMessage }}</span>
+  </div>
+  <div class="banner error" *ngIf="errorMessage">
+    <span class="banner-icon">&#9888;</span>
+    <span class="banner-text">{{ errorMessage }}</span>
+  </div>
+
+  <div class="settings-grid">
+    <!-- SECTION 1: MAP CONFIGURATIONS -->
+    <div class="settings-card">
+      <div class="card-header">
+        <span class="card-icon">&#128506;</span>
+        <h3>Map Configurations</h3>
+      </div>
+      <div class="card-body">
+        <div class="input-group">
+          <label for="mapTheme">Default Map Theme</label>
+          <select id="mapTheme" [(ngModel)]="mapTheme" (change)="saveGeneralSettings()">
+            <option value="standard">OpenStreetMap Standard</option>
+            <option value="dark">CartoDB Dark Matter (Dark Mode)</option>
+            <option value="satellite">Esri World Imagery (Satellite)</option>
+          </select>
+          <span class="helper-text">Select your preferred background layer map style.</span>
+        </div>
+
+        <div class="input-group">
+          <label for="defaultCity">Default Home City</label>
+          <select id="defaultCity" [(ngModel)]="defaultCity" (change)="saveGeneralSettings()">
+            <option value="newyork">New York, USA</option>
+            <option value="london">London, UK</option>
+            <option value="newdelhi">New Delhi, India</option>
+            <option value="paris">Paris, France</option>
+            <option value="tokyo">Tokyo, Japan</option>
+          </select>
+          <span class="helper-text">Map centers on this location when loading dashboard modules.</span>
+        </div>
+
+        <div class="input-group">
+          <label for="defaultZoom">Default Zoom Level ({{ defaultZoom }})</label>
+          <input
+            type="range"
+            id="defaultZoom"
+            min="5"
+            max="18"
+            [(ngModel)]="defaultZoom"
+            (change)="saveGeneralSettings()"
+          />
+        </div>
+
+        <div class="input-group">
+          <label for="travelMode">Preferred Travel Mode</label>
+          <select id="travelMode" [(ngModel)]="travelMode" (change)="saveGeneralSettings()">
+            <option value="driving">Driving / Car</option>
+            <option value="walking">Walking / Pedestrian</option>
+            <option value="bicycling">Bicycling / Cycling</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 2: ACCOUNT & SECURITY -->
+    <div class="settings-card">
+      <div class="card-header">
+        <span class="card-icon">&#128100;</span>
+        <h3>Account & Security</h3>
+      </div>
+      <div class="card-body">
+        <div class="profile-header">
+          <div class="profile-avatar">
+            {{ username.substring(0, 2).toUpperCase() }}
+          </div>
+          <div class="profile-details">
+            <h4 class="username-label">{{ username }}</h4>
+            <span class="role-badge">Member</span>
+          </div>
+        </div>
+
+        <form (ngSubmit)="changePassword()" class="password-form">
+          <div class="input-group">
+            <label for="currentPassword">Current Password</label>
+            <input
+              type="password"
+              id="currentPassword"
+              name="currentPassword"
+              [(ngModel)]="currentPassword"
+              placeholder="Enter current password"
+              required
+            />
+          </div>
+
+          <div class="input-group">
+            <label for="newPassword">New Password</label>
+            <input
+              type="password"
+              id="newPassword"
+              name="newPassword"
+              [(ngModel)]="newPassword"
+              placeholder="Enter new password"
+              required
+            />
+          </div>
+
+          <div class="input-group">
+            <label for="confirmPassword">Confirm New Password</label>
+            <input
+              type="password"
+              id="confirmPassword"
+              name="confirmPassword"
+              [(ngModel)]="confirmPassword"
+              placeholder="Re-enter new password"
+              required
+            />
+          </div>
+
+          <button type="submit" class="settings-btn primary-btn">Update Password</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- SECTION 3: DATA & PRIVACY MANAGEMENT -->
+    <div class="settings-card">
+      <div class="card-header">
+        <span class="card-icon">&#128274;</span>
+        <h3>Data & Privacy</h3>
+      </div>
+      <div class="card-body">
+        <p class="section-desc">Manage your logged routing queries. Wiping data from the database cannot be reversed.</p>
+        
+        <div class="action-row">
+          <div class="action-desc">
+            <h5>Export Search History</h5>
+            <p>Download your route log coordinates and metrics as a JSON file.</p>
+          </div>
+          <button (click)="exportHistory()" class="settings-btn secondary-btn">Export Data</button>
+        </div>
+
+        <div class="action-row danger-row">
+          <div class="action-desc">
+            <h5>Wipe Search Logs</h5>
+            <p>Purge all stored locations, dates, and map coordinates from your history table.</p>
+          </div>
+          <button (click)="clearHistory()" class="settings-btn danger-btn">Clear Logs</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 4: INTERFACE PREFERENCES -->
+    <div class="settings-card">
+      <div class="card-header">
+        <span class="card-icon">&#127912;</span>
+        <h3>Interface Preferences</h3>
+      </div>
+      <div class="card-body">
+        <div class="input-group">
+          <label>Distance Calculation Unit</label>
+          <div class="radio-toggle-group">
+            <button
+              type="button"
+              class="toggle-choice-btn"
+              [class.active]="distanceUnit === 'metric'"
+              (click)="distanceUnit = 'metric'; saveGeneralSettings()"
+            >
+              Metric (km)
+            </button>
+            <button
+              type="button"
+              class="toggle-choice-btn"
+              [class.active]="distanceUnit === 'imperial'"
+              (click)="distanceUnit = 'imperial'; saveGeneralSettings()"
+            >
+              Imperial (mi)
+            </button>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Accent Color Scheme</label>
+          <div class="color-options">
+            <button
+              type="button"
+              class="color-dot indigo"
+              [class.selected]="accentColor === 'indigo'"
+              (click)="accentColor = 'indigo'; saveGeneralSettings()"
+              title="Indigo/Purple Gradient"
+            >
+              <span class="dot-inner"></span>
+            </button>
+            <button
+              type="button"
+              class="color-dot emerald"
+              [class.selected]="accentColor === 'emerald'"
+              (click)="accentColor = 'emerald'; saveGeneralSettings()"
+              title="Emerald Green Accent"
+            >
+              <span class="dot-inner"></span>
+            </button>
+            <button
+              type="button"
+              class="color-dot orange"
+              [class.selected]="accentColor === 'orange'"
+              (click)="accentColor = 'orange'; saveGeneralSettings()"
+              title="Cyberpunk Orange Accent"
+            >
+              <span class="dot-inner"></span>
+            </button>
+          </div>
+          <span class="helper-text">Select your visual dashboard highlights color palette.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

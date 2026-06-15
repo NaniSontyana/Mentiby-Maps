@@ -1,0 +1,21 @@
+# Ignore node dependencies in all subfolders
+**/node_modules/
+
+# Ignore local SQLite databases
+**/*.db
+**/*.sqlite
+
+# Ignore environment config files
+**/.env*
+
+# Ignore compilation build output
+**/dist/
+**/.angular/
+
+# System / Editor files
+.DS_Store
+Thumbs.db
+**/.vscode/
+**/.idea/
+*.suo
+*.sln
