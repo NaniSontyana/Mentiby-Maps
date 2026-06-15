@@ -5,8 +5,9 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Initialize SQLite database in the backend directory
-const dbPath = path.join(__dirname, 'mentibymaps.db');
+// Initialize SQLite database in the backend directory (or persistent disk on Render)
+const dbDir = process.env.RENDER ? '/var/data' : __dirname;
+const dbPath = path.join(dbDir, 'mentibymaps.db');
 console.log('Connecting to SQLite database at:', dbPath);
 const db = new DatabaseSync(dbPath);
 
