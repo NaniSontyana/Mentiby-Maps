@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MapService } from '../services/map.service';
 import { HttpClientModule } from '@angular/common/http';
+import { environment } from '../services/environment';
 
 @Component({
   selector: 'app-google-map',
@@ -26,6 +27,39 @@ export class GoogleMapComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.loadGoogleMapsScript().then(() => {
+      this.initMap();
+    }).catch(err => {
+      console.error('Failed to load Google Maps script dynamically:', err);
+    });
+  }
+
+  loadGoogleMapsScript(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (typeof google !== 'undefined' && google.maps) {
+        resolve();
+        return;
+      }
+
+      const existingScript = document.getElementById('google-maps-script');
+      if (existingScript) {
+        existingScript.addEventListener('load', () => resolve());
+        existingScript.addEventListener('error', (err) => reject(err));
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.id = 'google-maps-script';
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${environment.googleMapsApiKey}&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => resolve();
+      script.onerror = (err) => reject(err);
+      document.head.appendChild(script);
+    });
+  }
+
+  initMap(): void {
     const savedCity = localStorage.getItem('mentiby_defaultCity') || 'newyork';
     const savedZoom = parseInt(localStorage.getItem('mentiby_defaultZoom') || '13', 10);
 
