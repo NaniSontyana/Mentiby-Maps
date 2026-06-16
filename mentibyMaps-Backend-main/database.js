@@ -1,63 +1,97 @@
 import { DatabaseSync } from 'node:sqlite';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import fs from 'fs';
+import pg from 'pg';
+
+const { Pool } = pg;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Initialize SQLite database in the backend directory (or persistent disk on Render)
-const dbDir = process.env.RENDER ? '/var/data' : __dirname;
+let pool = null;
+let sqliteDb = null;
 
-// Ensure database directory exists
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
+// Use Postgres if DATABASE_URL is provided (Render production)
+if (process.env.DATABASE_URL) {
+  console.log('Connecting to PostgreSQL database...');
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+      rejectUnauthorized: false // Required for secure Render/Supabase connection
+    }
+  });
+
+  // Create tables in PostgreSQL (using SERIAL for primary keys)
+  pool.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      username VARCHAR(255) PRIMARY KEY,
+      password VARCHAR(255) NOT NULL
+    );
+  `).catch(err => console.error('Error creating users table:', err));
+
+  pool.query(`
+    CREATE TABLE IF NOT EXISTS history (
+      id SERIAL PRIMARY KEY,
+      username VARCHAR(255),
+      start_destination TEXT,
+      end_destination TEXT,
+      map_type VARCHAR(100),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `).catch(err => console.error('Error creating history table:', err));
+
+} else {
+  // Fallback to SQLite (Local development)
+  const dbPath = path.join(__dirname, 'mentibymaps.db');
+  console.log('Connecting to local SQLite database at:', dbPath);
+  sqliteDb = new DatabaseSync(dbPath);
+
+  // Create required tables in SQLite
+  sqliteDb.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+      username TEXT PRIMARY KEY,
+      password TEXT NOT NULL
+    );
+  `);
+
+  sqliteDb.exec(`
+    CREATE TABLE IF NOT EXISTS history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT,
+      start_destination TEXT,
+      end_destination TEXT,
+      map_type TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
 }
 
-const dbPath = path.join(dbDir, 'mentibymaps.db');
-console.log('Connecting to SQLite database at:', dbPath);
-const db = new DatabaseSync(dbPath);
-
-// Create required tables automatically on startup if they don't exist
-db.exec(`
-  CREATE TABLE IF NOT EXISTS users (
-    username TEXT PRIMARY KEY,
-    password TEXT NOT NULL
-  );
-`);
-
-db.exec(`
-  CREATE TABLE IF NOT EXISTS history (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT,
-    start_destination TEXT,
-    end_destination TEXT,
-    map_type TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  );
-`);
-
 /**
- * Execute a SQL query on the SQLite database.
- * Translates PostgreSQL-style parameter placeholders ($1, $2...) to SQLite placeholders (?).
- * Returns an object with `rows` and `rowCount` to maintain compatibility with the pg driver.
+ * Execute a SQL query on the database.
+ * Seamlessly handles connection routing and query syntax compatibility.
  */
 export const query = async (text, params) => {
-  try {
-    // Translate PG $1, $2 placeholders to SQLite ? placeholders
-    const translatedSql = text.replace(/\$\d+/g, '?');
-    
-    const stmt = db.prepare(translatedSql);
-    
-    // Bind parameters and run
-    const rows = params && params.length > 0 ? stmt.all(...params) : stmt.all();
-    
+  if (pool) {
+    // PostgreSQL mode
+    const res = await pool.query(text, params);
     return {
-      rows: rows,
-      rowCount: rows.length
+      rows: res.rows,
+      rowCount: res.rowCount
     };
-  } catch (error) {
-    console.error('Database query error:', error);
-    throw error;
+  } else {
+    // SQLite mode
+    try {
+      const translatedSql = text.replace(/\$\d+/g, '?');
+      const stmt = sqliteDb.prepare(translatedSql);
+      const rows = params && params.length > 0 ? stmt.all(...params) : stmt.all();
+      
+      return {
+        rows: rows,
+        rowCount: rows.length
+      };
+    } catch (error) {
+      console.error('SQLite query error:', error);
+      throw error;
+    }
   }
 };
