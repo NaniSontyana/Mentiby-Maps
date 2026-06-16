@@ -1,0 +1,12 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "npm install --prefix mentiby-maps-version-3",
+  "buildCommand": "npm run build --prefix mentiby-maps-version-3",
+  "outputDirectory": "mentiby-maps-version-3/dist/mentibymaps/browser",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
