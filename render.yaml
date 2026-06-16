@@ -1,0 +1,19 @@
+databases:
+  - name: mentibymaps-db
+    plan: free
+    databaseName: mentibymaps
+    user: menti_admin
+
+services:
+  - type: web
+    name: mentibymaps-backend
+    runtime: node
+    plan: free
+    rootDir: mentibyMaps-Backend-main
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: mentibymaps-db
+          property: connectionString
