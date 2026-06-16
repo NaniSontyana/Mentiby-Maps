@@ -26,6 +26,24 @@ app.get('/', (req, res) => {
   res.send('Welcome to the login system!');
 });
 
+app.get('/db-status', async (req, res) => {
+  try {
+    const result = await query('SELECT 1 as connection_test');
+    res.status(200).json({ 
+      status: 'success', 
+      database: process.env.DATABASE_URL ? 'PostgreSQL' : 'SQLite',
+      result: result.rows 
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      status: 'error', 
+      database: process.env.DATABASE_URL ? 'PostgreSQL' : 'SQLite',
+      message: error.message, 
+      stack: error.stack 
+    });
+  }
+});
+
 
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
