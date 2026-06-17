@@ -3,7 +3,7 @@ const getBaseUrl = (): string => {
     const hostname = window.location.hostname;
     // If we're not running on localhost, use the production backend URL
     if (!hostname.includes('localhost') && !hostname.includes('127.0.0.1')) {
-      return 'https://mentiby-maps.onrender.com';
+      return 'https://mentiby-maps-2.onrender.com';
     }
   }
   return 'http://localhost:3000';
