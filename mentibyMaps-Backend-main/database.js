@@ -1,4 +1,3 @@
-import { DatabaseSync } from 'node:sqlite';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import pg from 'pg';
@@ -42,6 +41,7 @@ if (process.env.DATABASE_URL) {
 
 } else {
   // Fallback to SQLite (Local development)
+  const { DatabaseSync } = await import('node:sqlite');
   const dbPath = path.join(__dirname, 'mentibymaps.db');
   console.log('Connecting to local SQLite database at:', dbPath);
   sqliteDb = new DatabaseSync(dbPath);
